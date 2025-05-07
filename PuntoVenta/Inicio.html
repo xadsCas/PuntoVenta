@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio - Punto de Venta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: #333;
+            margin-top: 30px;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 10px;
+            width: 280px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card img {
+            width: 80px;
+            height: 80px;
+        }
+
+        .button {
+            display: block;
+            padding: 12px;
+            width: 100%;
+            font-size: 1em;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .button:active {
+            background-color: #004085;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .card {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Bienvenido al Punto de Venta</h1>
+<p style="text-align:center;">Selecciona una opción para continuar:</p>
+
+<div class="container">
+
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Productos">
+        <a href="Inventario.php" class="button">Agregar Productos</a>
+        <a href="MostrarProductos.php" class="button">Mostrar Productos</a>
+    </div>
+
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Ventas">
+        <a href="Venta.php" class="button">Realizar Venta</a>
+        <a href="Compras.php" class="button">Comprar a proveedor</a>
+    </div>
+
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Historial">
+        <a href="HistorialVentas.php" class="button">Historial Ventas</a>
+        <a href="HistorialCompras.php" class="button">Historial Compras</a>
+    </div>
+
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Empleados">
+        <a href="AgregarEmpleados.php" class="button">Agregar Empleados</a>
+        <a href="MostrarEmpleaditos.php" class="button">Mostrar Empleados</a>
+    </div>
+
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Proveedores">
+        <a href="AgregarProveedores.php" class="button">Agregar Proveedores</a>
+        <a href="MostarProveedores.php" class="button">Mostrar Proveedores</a>
+    </div>
+
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Clientes">
+        <a href="AgregarClientes.php" class="button">Agregar Clientes</a>
+        <a href="MostrarClientes.php" class="button">Mostrar Clientes</a>
+    </div>
+
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Factura">
+        <a href="facturar.html" class="button">Facturar</a>
+        <a href="historial_facturas.php" class="button">Historial Facturas</a>
+    </div>
+
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Arqueo">
+        <a href="arqueo.php" class="button">Arqueo</a>
+        <a href="historial_arqueo.php" class="button">Historial Arqueo</a>
+    </div>
+
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Corte caja">
+        <a href="realizar_corte.php" class="button">Corte Caja</a>
+        <a href="historial_cortes.php" class="button">Historial Cortes</a>
+    </div>
+
+</div>
+
+</body>
+</html>

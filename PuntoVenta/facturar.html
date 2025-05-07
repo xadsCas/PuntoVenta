@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generar Factura</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #eef2f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .factura-form {
+            background-color: #fff;
+            padding: 25px 35px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 350px;
+        }
+
+        .factura-form h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .factura-form label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        .factura-form input {
+            width: 100%;
+            padding: 10px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .factura-form button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .factura-form button:hover {
+            background-color: #218838;
+        }
+
+        .factura-form a {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .factura-form a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <form class="factura-form" method="POST" action="facturar.php" target="_blank">
+        <h2>Generar Factura</h2>
+
+        <label for="folio">Folio de la Venta</label>
+        <input type="text" name="folio" id="folio" required>
+
+        <label for="id_cliente">ID del Cliente</label>
+        <input type="text" name="id_cliente" id="id_cliente" required>
+
+        <button type="submit">Generar PDF</button>
+
+        <a href="inicio.html">Volver al inicio</a>
+    </form>
+
+</body>
+</html>
