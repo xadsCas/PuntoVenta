@@ -2,7 +2,7 @@
 include "conexion.php";
 
 // Obtener productos
-$sql_productos = "SELECT Id_producto, Nombre, Precio_venta, Stock_actual FROM Inventario WHERE Stock_actual > 0";
+$sql_productos = "SELECT Id_producto, Nombre, Precio_venta, Stock_actual, Descripcion FROM Inventario WHERE Stock_actual > 0";
 $result_productos = $conn->query($sql_productos);
 $productos_js = [];
 while ($row = $result_productos->fetch_assoc()) {
@@ -17,11 +17,10 @@ while ($row = $result_empleados->fetch_assoc()) {
     $empleados_js[$row["id_empleado"]] = $row["nombre"];
 }
 
-// Recolectar folio de venta (por si se acaba de redirigir después de registrar)
+// Recolectar folio de venta
 $folio_generado = $_GET["folio_generado"] ?? null;
 $mensaje = $_GET["mensaje"] ?? null;
 
-// Procesar venta solo si es POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id_empleado = $_POST["id_empleado"];
     $total = $_POST["total"];
@@ -60,7 +59,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $sql_update_caja = "UPDATE Caja SET dinero_actual = '$nuevo_dinero' WHERE id = 1";
                 $conn->query($sql_update_caja);
 
-                // Redirigir con PRG
                 header("Location: Venta.php?folio_generado=$folio_venta&mensaje=Venta+registrada+correctamente");
                 exit;
             } else {
@@ -84,6 +82,8 @@ $conn->close();
     <title>Registrar Venta</title>
     <style>
         .producto-row { margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #000; padding: 5px; text-align: center; }
     </style>
 </head>
 <body>
@@ -102,8 +102,21 @@ $conn->close();
     <label for="id_producto_input">Ingresar ID de Producto:</label>
     <input type="number" id="id_producto_input">
     <button type="button" onclick="agregarProducto()">Agregar Producto</button>
+    <button type="button" onclick="limpiarLista()">🗑️ Limpiar Lista</button>
 
-    <div id="lista_productos"></div>
+    <table id="tabla_productos">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Precio Unitario</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody id="lista_productos"></tbody>
+    </table>
 
     <label for="total">Total:</label>
     <input type="text" name="total" id="total" readonly><br><br>
@@ -114,7 +127,7 @@ $conn->close();
 <?php if ($folio_generado): ?>
     <form action="ticket_venta.php" method="GET" target="_blank">
         <input type="hidden" name="folio" value="<?php echo $folio_generado; ?>"><br><br>
-        <button type="submit"> Imprimir Ticket</button>
+        <button type="submit">Imprimir Ticket</button>
     </form>
 
     <form action="facturar.php" method="POST" target="_blank">
@@ -142,44 +155,52 @@ $conn->close();
     });
 
     function agregarProducto() {
-        const id = document.getElementById("id_producto_input").value;
-        if (!productos[id]) {
-            alert("Producto no encontrado o sin stock.");
-            return;
-        }
-
-        if (document.getElementById("producto_" + id)) {
-            alert("Este producto ya fue agregado.");
-            return;
-        }
-
-        const prod = productos[id];
-        const div = document.createElement("div");
-        div.className = "producto-row";
-        div.id = "producto_" + id;
-        div.innerHTML = `
-            <strong>${prod.Nombre}</strong> - $${prod.Precio_venta} <br>
-            Cantidad: <input type="number" name="productos[${id}][cantidad]" value="1" min="1" onchange="actualizarTotal()">
-            <input type="hidden" name="productos[${id}][id_producto]" value="${id}">
-            <input type="hidden" name="productos[${id}][precio_unitario]" value="${prod.Precio_venta}">
-            Subtotal: $<span class="subtotal" id="subtotal_${id}">${prod.Precio_venta}</span>
-            <button type="button" onclick="eliminarProducto('${id}')">❌</button>
-        `;
-        lista.appendChild(div);
-        actualizarTotal();
+    const inputProducto = document.getElementById("id_producto_input");
+    const id = inputProducto.value;
+    
+    if (!productos[id]) {
+        alert("Producto no encontrado o sin stock.");
+        return;
     }
 
+    if (document.getElementById("producto_" + id)) {
+        alert("Este producto ya fue agregado.");
+        return;
+    }
+
+    const prod = productos[id];
+    const tr = document.createElement("tr");
+    tr.id = "producto_" + id;
+    tr.innerHTML = `
+        <td><strong>${prod.Nombre}</strong></td>
+        <td>${prod.Descripcion}</td>
+        <td>$${parseFloat(prod.Precio_venta).toFixed(2)}</td>
+        <td>
+            <input type="number" name="productos[${id}][cantidad]" value="1" min="1" onchange="actualizarTotal()">
+            <input type="hidden" name="productos[${id}][id_producto]" value="${id}">
+            <input type="hidden" name="productos[${id}][precio_unitario]" value="${prod.Precio_venta}">
+        </td>
+        <td>$<span class="subtotal" id="subtotal_${id}">${parseFloat(prod.Precio_venta).toFixed(2)}</span></td>
+        <td><button type="button" onclick="eliminarProducto('${id}')">❌</button></td>
+    `;
+    lista.appendChild(tr);
+    actualizarTotal();
+    inputProducto.value = ""; // ← Esta línea limpia el campo
+    inputProducto.focus();    // ← Esta línea (opcional) vuelve a enfocar el campo
+}
+
+
     function eliminarProducto(id) {
-        const elem = document.getElementById("producto_" + id);
-        if (elem) {
-            elem.remove();
+        const fila = document.getElementById("producto_" + id);
+        if (fila) {
+            fila.remove();
             actualizarTotal();
         }
     }
 
     function actualizarTotal() {
         let total = 0;
-        document.querySelectorAll(".producto-row").forEach(div => {
+        document.querySelectorAll(".producto-row, #lista_productos tr").forEach(div => {
             const input = div.querySelector("input[type='number']");
             const cantidad = parseInt(input.value) || 0;
             const precio = parseFloat(div.querySelector("input[name$='[precio_unitario]']").value);
@@ -190,6 +211,10 @@ $conn->close();
         });
         totalInput.value = total.toFixed(2);
     }
+    function limpiarLista() {
+    lista.innerHTML = "";
+    actualizarTotal();
+}
 </script>
 
 </body>

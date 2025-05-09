@@ -68,23 +68,139 @@
             background-color: #004085;
         }
 
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 2em;
-            }
+        /* Estilo del menu hamburguesa */
+        .menu-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #333;
+            color: white;
+            align-items: center;
+        }
 
-            .card {
-                width: 90%;
-            }
+        .hamburger {
+            cursor: pointer;
+            font-size: 30px;
+        }
+
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        }
+
+        .sidebar a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #f1f1f1;
+        }
+
+        .submenu {
+            display: none;
+            margin-left: 20px;
+        }
+
+        .submenu a {
+            font-size: 20px;
+        }
+
+        .active {
+            display: block;
+        }
+
+        @media screen and (max-height: 450px) {
+            .sidebar {padding-top: 15px;}
+            .sidebar a {font-size: 18px;}
         }
     </style>
 </head>
 <body>
 
-<h1>Bienvenido al Punto de Venta</h1>
-<p style="text-align:center;">Selecciona una opción para continuar:</p>
+<div class="menu-bar">
+    <span class="hamburger" onclick="toggleMenu()">&#9776; Menú-Punto de venta</span> 
+</div>
+
+<div id="mySidebar" class="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeMenu()">&times;</a>
+    <a href="#" onclick="toggleSubmenu(event)">Empleados</a>
+    <div class="submenu">
+        <a href="AgregarEmpleados.php">Agregar Empleados</a>
+        <a href="MostrarEmpleaditos.php">Mostrar Empleados</a>
+    </div>
+
+    <a href="#" onclick="toggleSubmenu(event)">Proveedores</a>
+    <div class="submenu">
+        <a href="AgregarProveedores.php">Agregar Proveedores</a>
+        <a href="MostarProveedores.php">Mostrar Proveedores</a>
+    </div>
+
+    <a href="#" onclick="toggleSubmenu(event)">Clientes</a>
+    <div class="submenu">
+        <a href="AgregarClientes.php">Agregar Clientes</a>
+        <a href="MostrarClientes.php">Mostrar Clientes</a>
+    </div>
+
+    <a href="#" onclick="toggleSubmenu(event)">Productos</a>
+    <div class="submenu">
+        <a href="Inventario.php">Agregar Productos</a>
+        <a href="MostrarProductos.php">Mostrar Productos</a>
+    </div>
+
+    <a href="#" onclick="toggleSubmenu(event)">Compras</a>
+    <div class="submenu">
+        <a href="Compras.php">Comprar a proveedor</a>
+        <a href="HistorialCompras.php">Historial Compras</a>
+    </div>
+
+    <a href="#" onclick="toggleSubmenu(event)">Ventas</a>
+    <div class="submenu">
+        <a href="Venta.php">Realizar Venta</a>
+        <a href="HistorialVentas.php">Historial Ventas</a>
+    </div>
+
+    <a href="#" onclick="toggleSubmenu(event)">Factura</a>
+    <div class="submenu">
+        <a href="facturar.html">Facturar</a>
+        <a href="historial_facturas.php">Historial Facturas</a>
+    </div>
+
+    <a href="#" onclick="toggleSubmenu(event)">Caja</a>
+    <div class="submenu">
+        <a href="arqueo.php">Arqueo</a>
+        <a href="historial_arqueo.php">Historial Arqueo</a>
+        <a href="realizar_corte.php">Corte Caja</a>
+        <a href="historial_cortes.php">Historial Cortes</a>
+    </div>
+</div>
 
 <div class="container">
+
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Proveedores">
+        <a href="AgregarProveedores.php" class="button">Agregar Proveedores</a>
+        <a href="MostarProveedores.php" class="button">Mostrar Proveedores</a>
+    </div>
+
+    
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Empleados">
+        <a href="AgregarEmpleados.php" class="button">Agregar Empleados</a>
+        <a href="MostrarEmpleaditos.php" class="button">Mostrar Empleados</a>
+    </div>
 
     <div class="card">
         <img src="https://via.placeholder.com/100" alt="Productos">
@@ -93,33 +209,21 @@
     </div>
 
     <div class="card">
-        <img src="https://via.placeholder.com/100" alt="Ventas">
-        <a href="Venta.php" class="button">Realizar Venta</a>
+        <img src="https://via.placeholder.com/100" alt="Compras">
         <a href="Compras.php" class="button">Comprar a proveedor</a>
-    </div>
-
-    <div class="card">
-        <img src="https://via.placeholder.com/100" alt="Historial">
-        <a href="HistorialVentas.php" class="button">Historial Ventas</a>
         <a href="HistorialCompras.php" class="button">Historial Compras</a>
-    </div>
-
-    <div class="card">
-        <img src="https://via.placeholder.com/100" alt="Empleados">
-        <a href="AgregarEmpleados.php" class="button">Agregar Empleados</a>
-        <a href="MostrarEmpleaditos.php" class="button">Mostrar Empleados</a>
-    </div>
-
-    <div class="card">
-        <img src="https://via.placeholder.com/100" alt="Proveedores">
-        <a href="AgregarProveedores.php" class="button">Agregar Proveedores</a>
-        <a href="MostarProveedores.php" class="button">Mostrar Proveedores</a>
     </div>
 
     <div class="card">
         <img src="https://via.placeholder.com/100" alt="Clientes">
         <a href="AgregarClientes.php" class="button">Agregar Clientes</a>
         <a href="MostrarClientes.php" class="button">Mostrar Clientes</a>
+    </div>
+
+    <div class="card">
+        <img src="https://via.placeholder.com/100" alt="Ventas">
+        <a href="Venta.php" class="button">Realizar Venta</a>
+        <a href="HistorialVentas.php" class="button">Historial Ventas</a>
     </div>
 
     <div class="card">
@@ -141,6 +245,22 @@
     </div>
 
 </div>
+
+<script>
+    function toggleMenu() {
+        const sidebar = document.getElementById("mySidebar");
+        sidebar.style.width = sidebar.style.width === "250px" ? "0" : "250px";
+    }
+
+    function closeMenu() {
+        document.getElementById("mySidebar").style.width = "0";
+    }
+
+    function toggleSubmenu(event) {
+        const submenu = event.target.nextElementSibling;
+        submenu.style.display = submenu.style.display === "block" ? "none" : "block";
+    }
+</script>
 
 </body>
 </html>
