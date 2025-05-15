@@ -9,7 +9,7 @@ if (!isset($_GET['folio'])) {
 $folio = intval($_GET['folio']);
 
 // Obtener datos de la venta
-$sql_venta = "SELECT v.Folio, v.Fecha, e.Nombre AS Empleado, v.Total
+$sql_venta = "SELECT v.Folio, v.Fecha, e.Nombre AS Empleado, v.Total, v.Tipo_pago, v.Cambio
               FROM venta v
               INNER JOIN empleado e ON v.Id_Empleado = e.Id_Empleado
               WHERE v.Folio = $folio";
@@ -21,7 +21,7 @@ if (!$result_venta || $result_venta->num_rows == 0) {
 
 $venta = $result_venta->fetch_assoc();
 
-// Obtener detalles
+// Obtener detalles de productos vendidos
 $sql_detalle = "SELECT d.Id_producto, i.Nombre, d.Cantidad, d.Precio_unitario, d.Subtotal
                 FROM detalle_venta d
                 INNER JOIN inventario i ON d.Id_producto = i.id_producto
@@ -33,10 +33,9 @@ $pdf = new FPDF('P','mm',[80,297]); // tamaño ticket 80mm
 $pdf->AddPage();
 $pdf->SetMargins(4, 4, 4);
 $pdf->SetFont('Courier', 'B', 14);
-$pdf->Cell(0, 8, 'TIENDA ', 0, 1, 'C');
+$pdf->Cell(0, 8, 'TIENDA', 0, 1, 'C');
 
 $pdf->SetFont('Courier', '', 10);
-
 $pdf->Ln(1);
 $pdf->Cell(0, 0, str_repeat('-', 32), 0, 1, 'C');
 $pdf->Ln(2);
@@ -45,16 +44,13 @@ $pdf->Cell(0, 5, 'Folio: ' . $venta['Folio']);
 $pdf->Ln(4);
 $pdf->Cell(0, 5, 'Fecha: ' . $venta['Fecha']);
 $pdf->Ln(4);
-
-// CORREGIDO: se hace salto de línea tras imprimir el nombre del empleado
 $pdf->MultiCell(0, 5, 'Empleado: ' . $venta['Empleado']);
-$pdf->Ln(2); // un pequeño espacio extra antes de la tabla
+$pdf->Ln(2);
 
 $pdf->Cell(0, 0, str_repeat('-', 32), 0, 1, 'C');
 $pdf->Ln(2);
 
-
-// Encabezados de tabla
+// Encabezado de productos
 $pdf->SetFont('Courier', 'B', 10);
 $pdf->Cell(30, 5, 'Producto', 0);
 $pdf->Cell(10, 5, 'Cant', 0, 0, 'C');
@@ -78,7 +74,19 @@ $pdf->Ln(3);
 $pdf->SetFont('Courier', 'B', 12);
 $pdf->Cell(0, 6, 'TOTAL: $' . number_format($venta['Total'], 2), 0, 1, 'R');
 $pdf->Ln(3);
+
+// Tipo de pago
 $pdf->SetFont('Courier', '', 10);
+$pdf->MultiCell(0, 5, 'Pago con: ' . ucfirst($venta['Tipo_pago']), 0, 'L');
+
+// Monto recibido y cambio (solo si aplica)
+if (is_numeric($venta['Cambio']) && $venta['Cambio'] >= 0) {
+    $monto_recibido = $venta['Total'] + $venta['Cambio'];
+    $pdf->Cell(0, 5, 'Entregado: $' . number_format($monto_recibido, 2), 0, 1, 'L');
+    $pdf->Cell(0, 5, 'Cambio:    $' . number_format($venta['Cambio'], 2), 0, 1, 'L');
+}
+
+$pdf->Ln(3);
 $pdf->Cell(0, 0, str_repeat('-', 32), 0, 1, 'C');
 $pdf->Ln(4);
 
@@ -90,6 +98,6 @@ $pdf->SetFont('Courier', '', 9);
 $pdf->Cell(0, 4, 'Conserve su ticket para cambios', 0, 1, 'C');
 $pdf->Cell(0, 4, 'No se aceptan devoluciones.', 0, 1, 'C');
 
-// Salida
+// Salida del PDF
 $pdf->Output('I', 'ticket_' . $folio . '.pdf');
 ?>
