@@ -9,6 +9,7 @@ while ($row = $result_productos->fetch_assoc()) {
     $productos_js[$row["Id_producto"]] = $row;
 }
 
+
 // Obtener empleados
 $sql_empleados = "SELECT id_empleado, nombre FROM Empleado";
 $result_empleados = $conn->query($sql_empleados);
@@ -26,6 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $total = $_POST["total"];
     $tipo_pago = $_POST["tipo_pago"];
     $cambio = $_POST["cambio"] ?? 0;
+    $num_tarjeta = $_POST["num_tarjeta"] ?? null;
 
     $sql_get_caja = "SELECT dinero_actual FROM Caja WHERE id = 1";
     $result_caja = $conn->query($sql_get_caja);
@@ -39,8 +41,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         });
 
         if (!empty($productos_validos)) {
-            $sql_venta = "INSERT INTO Venta (Id_Empleado, Total, Tipo_pago, Cambio) VALUES ('$id_empleado', '$total', '$tipo_pago', '$cambio')";
-            if ($conn->query($sql_venta) === TRUE) {
+           $stmt = $conn->prepare("INSERT INTO Venta (Id_Empleado, Total, tipo_pago, Cambio, num_tarjeta) VALUES (?, ?, ?, ?, ?)");
+           $stmt->bind_param("idsss", $id_empleado, $total, $tipo_pago, $cambio, $num_tarjeta);
+
+            if ($stmt->execute()) {
                 $folio_venta = $conn->insert_id;
 
                 foreach ($productos_validos as $producto) {
@@ -83,9 +87,9 @@ $conn->close();
     <meta charset="UTF-8">
     <title>Registrar Venta</title>
     <style>
-        .producto-row { margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #000; padding: 5px; text-align: center; }
+        .producto-preview td { padding: 2px 5px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -101,19 +105,19 @@ $conn->close();
     <span id="nombre_empleado" style="font-weight: bold; margin-left: 10px;"></span>
     <br><br>
 
-    <label for="id_producto_input">Ingresar ID de Producto:</label>
+    <label for="id_producto_input">ID de Producto:</label>
     <input type="number" id="id_producto_input">
     <button type="button" onclick="agregarProducto()">Agregar Producto</button>
     <button type="button" onclick="limpiarLista()">🗑️ Limpiar Lista</button>
 
-    <div id="preview_producto" style="margin-top: 10px; font-weight: bold;"></div>
+    <div id="preview_producto" style="margin-top: 10px;"></div>
 
     <table id="tabla_productos">
         <thead>
             <tr>
                 <th>Nombre</th>
                 <th>Descripción</th>
-                <th>Precio Unitario</th>
+                <th>Precio</th>
                 <th>Cantidad</th>
                 <th>Subtotal</th>
                 <th>Eliminar</th>
@@ -126,8 +130,8 @@ $conn->close();
     <input type="text" name="total" id="total" readonly><br><br>
 
     <label for="tipo_pago">Tipo de pago:</label>
-    <select name="tipo_pago" id="tipo_pago" onchange="actualizarMetodoPago()">
-        <option>Seleccion el metodo de pago: </option>
+    <select name="tipo_pago" id="tipo_pago" onchange="actualizarMetodoPago()" required>
+        <option value="">Seleccione el método de pago</option>
         <option value="efectivo">Efectivo</option>
         <option value="tarjeta">Tarjeta</option>
     </select><br><br>
@@ -140,72 +144,76 @@ $conn->close();
         <span id="cambio">0.00</span>
     </div>
 
+    <div id="pago_tarjeta_section" style="display: none;">
+        <label>Nombre en tarjeta:</label>
+        <input type="text" id="nombre_tarjeta"><br>
+        <label>Número de tarjeta:</label>
+        <input type="text" name="num_tarjeta" maxlength="16" pattern="\d{13,19}" required>
+
+        <label>CVV:</label>
+        <input type="text" id="cvv" maxlength="4"><br>
+        <label>Código Postal:</label>
+        <input type="text" id="cp" maxlength="10"><br>
+    </div>
+
     <input type="hidden" name="cambio" id="cambio_hidden">
 
-    <br><br>
+    <br>
     <button type="submit">Registrar Venta</button>
 </form>
 
 <?php if ($folio_generado): ?>
     <form action="ticket_venta.php" method="GET" target="_blank">
-        <input type="hidden" name="folio" value="<?php echo $folio_generado; ?>"><br><br>
+        <input type="hidden" name="folio" value="<?php echo $folio_generado; ?>">
         <button type="submit">Imprimir Ticket</button>
     </form>
 
     <form action="facturar.php" method="POST" target="_blank">
-        <input type="hidden" name="folio" value="<?php echo $folio_generado; ?>"><br><br>
+        <input type="hidden" name="folio" value="<?php echo $folio_generado; ?>">
         <label for="id_cliente">ID Cliente:</label>
         <input type="number" name="id_cliente" required>
-        <button type="submit">💼¿ Generar Factura</button>
+        <button type="submit">💼 Generar Factura</button>
     </form>
 <?php endif; ?>
 
-<br><br>
+<br>
 <a href="Inicio.html"><button>Volver al inicio</button></a>
 
 <script>
 const productos = <?php echo json_encode($productos_js, JSON_UNESCAPED_UNICODE); ?>;
 const empleados = <?php echo json_encode($empleados_js, JSON_UNESCAPED_UNICODE); ?>;
 
-const lista = document.getElementById("lista_productos");
-const totalInput = document.getElementById("total");
-const nombreEmpleado = document.getElementById("nombre_empleado");
-
 document.getElementById("id_empleado").addEventListener("input", function () {
     const id = this.value;
-    nombreEmpleado.textContent = empleados[id] || "Empleado no encontrado";
+    document.getElementById("nombre_empleado").textContent = empleados[id] || "Empleado no encontrado";
 });
 
 document.getElementById("id_producto_input").addEventListener("input", function () {
     const id = this.value;
-    const previewDiv = document.getElementById("preview_producto");
+    const prod = productos[id];
+    const preview = document.getElementById("preview_producto");
 
-    if (productos[id]) {
-        const prod = productos[id];
-        previewDiv.innerHTML = `
-            Producto: <strong>${prod.Nombre}</strong><br>
-            Descripción: ${prod.Descripcion}<br>
-            Precio: $${parseFloat(prod.Precio_venta).toFixed(2)}<br>
-            Stock disponible: ${prod.Stock_actual}
+    if (prod) {
+        preview.innerHTML = `
+            <table class="producto-preview">
+                <tr>
+                    <td><strong>${prod.Nombre}</strong></td>
+                    <td>${prod.Descripcion}</td>
+                    <td>Precio: $${parseFloat(prod.Precio_venta).toFixed(2)}</td>
+                    <td>Stock: ${prod.Stock_actual}</td>
+                </tr>
+            </table>
         `;
     } else {
-        previewDiv.innerHTML = "❌ Producto no encontrado o sin stock.";
+        preview.innerHTML = "❌ Producto no encontrado o sin stock.";
     }
 });
 
 function agregarProducto() {
-    const inputProducto = document.getElementById("id_producto_input");
-    const id = inputProducto.value;
-
-    if (!productos[id]) {
-        alert("Producto no encontrado o sin stock.");
-        return;
-    }
-
-    if (document.getElementById("producto_" + id)) {
-        alert("Este producto ya fue agregado.");
-        return;
-    }
+    const input = document.getElementById("id_producto_input");
+    const id = input.value;
+    if (!productos[id]) return alert("Producto no válido o sin stock.");
+    if (document.getElementById("producto_" + id)) return alert("Producto ya agregado.");
 
     const prod = productos[id];
     const tr = document.createElement("tr");
@@ -222,76 +230,62 @@ function agregarProducto() {
         <td>$<span class="subtotal" id="subtotal_${id}">${parseFloat(prod.Precio_venta).toFixed(2)}</span></td>
         <td><button type="button" onclick="eliminarProducto('${id}')">❌</button></td>
     `;
-    lista.appendChild(tr);
-    actualizarTotal();
-    inputProducto.value = "";
-    inputProducto.focus();
+    document.getElementById("lista_productos").appendChild(tr);
+    input.value = "";
     document.getElementById("preview_producto").innerHTML = "";
+    actualizarTotal();
 }
 
 function eliminarProducto(id) {
-    const fila = document.getElementById("producto_" + id);
-    if (fila) {
-        fila.remove();
-        actualizarTotal();
-    }
+    document.getElementById("producto_" + id)?.remove();
+    actualizarTotal();
 }
 
 function actualizarTotal() {
     let total = 0;
-    document.querySelectorAll("#lista_productos tr").forEach(div => {
-        const input = div.querySelector("input[type='number']");
-        const cantidad = parseInt(input.value) || 0;
-        const precio = parseFloat(div.querySelector("input[name$='[precio_unitario]']").value);
-        const id = div.id.replace("producto_", "");
+    document.querySelectorAll("#lista_productos tr").forEach(row => {
+        const cantidad = parseInt(row.querySelector("input[type='number']").value) || 0;
+        const precio = parseFloat(row.querySelector("input[name$='[precio_unitario]']").value);
         const subtotal = cantidad * precio;
+        const id = row.id.replace("producto_", "");
         document.getElementById("subtotal_" + id).textContent = subtotal.toFixed(2);
         total += subtotal;
     });
-    totalInput.value = total.toFixed(2);
+    document.getElementById("total").value = total.toFixed(2);
     calcularCambio();
 }
 
 function limpiarLista() {
-    lista.innerHTML = "";
+    document.getElementById("lista_productos").innerHTML = "";
     actualizarTotal();
     document.getElementById("preview_producto").innerHTML = "";
 }
 
 function actualizarMetodoPago() {
-    const tipoPago = document.getElementById("tipo_pago").value;
-    const seccionEfectivo = document.getElementById("pago_efectivo_section");
-
-    if (tipoPago === "efectivo") {
-        seccionEfectivo.style.display = "block";
-    } else {
-        seccionEfectivo.style.display = "none";
-        document.getElementById("cambio").textContent = "0.00";
-        document.getElementById("cambio_hidden").value = "0.00";
-    }
+    const tipo = document.getElementById("tipo_pago").value;
+    document.getElementById("pago_efectivo_section").style.display = tipo === "efectivo" ? "block" : "none";
+    document.getElementById("pago_tarjeta_section").style.display = tipo === "tarjeta" ? "block" : "none";
 }
 
 function calcularCambio() {
-    const total = parseFloat(totalInput.value) || 0;
+    const total = parseFloat(document.getElementById("total").value) || 0;
     const pagoCon = parseFloat(document.getElementById("pago_con").value) || 0;
     const cambio = pagoCon - total;
-    const cambioFinal = cambio >= 0 ? cambio.toFixed(2) : "0.00";
-    document.getElementById("cambio").textContent = cambioFinal;
-    document.getElementById("cambio_hidden").value = cambioFinal;
+    const finalCambio = cambio >= 0 ? cambio.toFixed(2) : "0.00";
+    document.getElementById("cambio").textContent = finalCambio;
+    document.getElementById("cambio_hidden").value = finalCambio;
 }
 
-// 🚫 Validación al enviar formulario
+// Validación antes de enviar
 document.querySelector("form").addEventListener("submit", function (e) {
     const tipoPago = document.getElementById("tipo_pago").value;
-    const total = parseFloat(totalInput.value) || 0;
+    const total = parseFloat(document.getElementById("total").value) || 0;
 
     if (tipoPago === "efectivo") {
         const pagoCon = parseFloat(document.getElementById("pago_con").value) || 0;
-
         if (pagoCon < total) {
             e.preventDefault();
-            alert("⚠️ El monto recibido en efectivo no es suficiente para cubrir el total de la venta.");
-            document.getElementById("pago_con").focus();
+            alert("⚠️ El monto recibido en efectivo no cubre el total.");
             return false;
         }
     }
